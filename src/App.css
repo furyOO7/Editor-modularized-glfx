@@ -1,0 +1,81 @@
+.main-container{
+    width: 300px;
+    height: 500px;
+    top: 180px;
+    left: 100px;
+    background-color: aquamarine;
+    position: fixed;
+    overflow: hidden;
+}
+.text{
+    background-color: azure;
+    /* padding: 4px; */
+    /* margin: 2px; */
+    width: 80px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    user-select: none;
+    /* z-index: 0; */
+  
+}
+.text:not[div]{
+    background-color: azure;
+    /* padding: 4px; */
+    /* margin: 2px; */
+    width: 80px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    user-select: none;
+    /* z-index: 0; */
+  
+}
+#text2{
+    top: 27px;
+}
+/* #text3{
+    width: 200px;
+} */
+
+#canvas {
+    width:300px;
+    height:500px;
+    border: 10px solid transparent;
+}
+.rectangle {
+    border: 1px solid #FF0000;
+    position: absolute;
+   
+}
+ .wrapped, .perm-wrapped{
+   position: absolute
+}
+/* .wrapped{
+    border: 1px solid black;
+} */
+
+.perm-wrapped{
+    border: 1px dotted black;
+}
+#ungroupIndivi{
+    opacity: 0;
+    }
+#delete{
+        opacity: 0;
+    }
+ #adjust{
+     opacity: 0;
+ }   
+    .flippable{
+    transform: scale(1,1);
+}
+
+.ds-selected{
+    border: 1px solid black;
+}
+div.ds-selectable:hover{
+    border: 1px solid black;
+}

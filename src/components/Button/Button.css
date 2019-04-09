@@ -1,0 +1,11 @@
+.bttn{
+    display: inline-block;
+    margin: 2px;
+}
+
+#ungroupIndivi{
+    opacity: 0;
+    }
+    #delete{
+        opacity: 0;
+    }
