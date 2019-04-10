@@ -4,7 +4,7 @@ import './slider.css'
 const slider = (props) => {
   return (
     <div className="slidecontainer">
-      <span id="trans">{props.slidertype}</span>
+      <span class="trans">{props.slidertype}</span>
       <input type="range" min={props.min} max={props.max} step={props.step} value={props.SliderRange.range} className="slider" id={props.SliderRange.name} 
       onChange={(event) => props.draggged(event, props.SliderRange)}
       // onMouseUp = {props.mouseLeft}

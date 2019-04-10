@@ -56,7 +56,8 @@ class App extends Component {
       src: null,
       element: null,
       canvaselement: null,
-      dataUrl: null
+      dataUrl: null,
+      allImageElement: []
     },
     platform: null
   };
@@ -95,7 +96,9 @@ class App extends Component {
 
   componentDidMount() {
      this.platform = window.platform
-
+     let image = {...this.state.image}
+     image.allImageElement = document.querySelectorAll('img')
+     this.setState({ image: image });
   /*   var idArray = []; */
     /* var permIdarray = []; */
     this.ds = new DragSelect({
@@ -109,14 +112,12 @@ class App extends Component {
             .attr("class")
             .indexOf("flippable") > -1
         ) {
+          this.canvas = fx.canvas();
           $("#adjust").css({
             opacity: 1,
             disabled: false
-            
           });
-        }
-        ;
-        
+        };
         this.positionElement = element;
         let slidder = { ...this.state.slidder };
         slidder.selected.push(element);
@@ -124,7 +125,7 @@ class App extends Component {
         slidder.range = Math.trunc($(element).css("opacity") * 100);
         this.setState({
           slidder: slidder,
-          platform: this.platform
+          platform: this.platform,
         });
         this.idArray.push(this.ds.getSelection());
         this.copyArr.push(element);        
@@ -142,8 +143,6 @@ class App extends Component {
     break;
   }
   }
-
-  
       $("#ungroupIndivi").css({
         opacity: 0
       });
@@ -213,24 +212,7 @@ class App extends Component {
       this.keyEventCheck(event, map);
     };
   }
-  canvasToimg = (e) => {
-    if(this.state.image.element !== null){
-     let canvass = $('canvas');
-     let dataURL= canvass[0].toDataURL();
-      let img = document.createElement('IMG')
-      img.id = $(this.state.image.element).attr('id');
-      $(img).addClass($(this.state.image.element).attr('class'));
-      img.src = dataURL
-      $(canvass).parent().append(img)
-       $(canvass).remove();
-       let image = {...this.state.image}
-      image.element = null;
-      image.src = null
-      this.setState({
-        image: image
-      })
-    }
-  }
+  
   keyEventCheck = (event, map) => {
 /*    console.log(event,map, this.state.platform); */
     if (this.deleteElm && map[46]) {
@@ -647,8 +629,25 @@ class App extends Component {
       );
     }
   };
-
-imgTocanvas = (element) => {
+  canvasToimg = (e) => {
+    if(this.state.image.element !== null){
+     let canvass = $('canvas');
+     let dataURL= canvass[0].toDataURL();
+      let img = document.createElement('IMG')
+      img.id = $(this.state.image.element).attr('id');
+      $(img).addClass($(this.state.image.element).attr('class'));
+      img.src = dataURL
+      $(canvass).parent().append(img)
+       $(canvass).remove();
+       let image = {...this.state.image}
+      image.element = null;
+      image.src = null
+      this.setState({
+        image: image
+      })
+    }
+  }
+  imgTocanvas = (element) => {
   let pHeight = $(element).get(0).offsetHeight
   let pWidth = $(element).get(0).offsetWidth
  let image = $(element).children();

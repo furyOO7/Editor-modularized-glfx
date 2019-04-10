@@ -8,7 +8,6 @@
     opacity: 0.7;
     -webkit-transition: .2s;
     transition: opacity .2s;
-    margin-top: 15px;
   }
   .slidecontainer span
   {
@@ -36,9 +35,11 @@
     background: #4CAF50;
     cursor: pointer;
   }
-  #trans{
+  .slidecontainer span.trans{
     background-color: #b3e68c8c;
     font-weight: bold;
+    flex-basis: 30%;
+    text-align: center;
   }
   .adjust-main-container .slider{
     -webkit-appearance: none;
@@ -50,5 +51,16 @@
     opacity: 0.7;
     -webkit-transition: .2s;
     transition: opacity .2s;
+   
+  }
+  .adjust-main-container .slidecontainer {
+    display: flex;
+    align-items: center;
+    flex-basis: 30%;
+    text-align: center;
+  }
+  .adjust-main-container .slidecontainer:not(:first-child){
     margin-top: 15px;
   }
+  .slidecontainer > span:not(.trans){min-width: 32px;}
+
