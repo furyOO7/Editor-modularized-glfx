@@ -1,9 +1,7 @@
 import React, { Component } from "react";
 import "./Adjust.css";
 import Slider from "../slider/slider";
-import $ from "jquery";
-import { resolve } from "dns";
-import { reject } from "q";
+
 
 
 
@@ -68,14 +66,14 @@ class Adjust extends Component {
      if (this.props.selected.element[0].tagName === 'IMG') {
       this.texture = this.props.canvas.texture(this.props.selected.element[0]);
     } 
-    if (this.props.selected.element[0].tagName === 'CANVAS') {
+    if (this.props.selected.element[0].tagName === 'CANVAS') {      
       this.props.selected.allImageElement.forEach(el => {
-        if(el.getAttribute('id') === this.props.selected.element[0].getAttribute('id')){
+        console.log(el.getAttribute('id') , this.props.selected.allImageElement,el.getAttribute('id'), this.props.selected.element[0].getAttribute('id'), this.props.selected.element[0].getAttribute('id').indexOf(el.getAttribute('id')));
+        if(el.getAttribute('id') === this.props.selected.element[0].getAttribute('id') || this.props.selected.element[0].getAttribute('id').indexOf(el.getAttribute('id')) > -1){
           this.loopCanvasElement = el;
           this.texture = this.props.canvas.texture(el);
         }
       })
-      
     }
   }
 
@@ -141,13 +139,11 @@ applyFilter = (element) => {
       ajustObj.push(objAdj);
      }  
   });
- 
   let imgID = this.props.selected.element[0].getAttribute('id');
+ 
 if(document.getElementById(imgID) !== null && document.getElementById(imgID).tagName === 'IMG'){
    this.appendCanvas(this.props.selected.element[0]).then(val => {
     if(val === 'Appended'){
-      console.log(this.currentId);
-      
       let currentItem=document.querySelector("#"+this.currentId)
       currentItem.setAttribute("data-adjust",JSON.stringify({...ajustObj}))
     }
@@ -176,29 +172,8 @@ appendCanvas = (element)=>{
     this.props.canvas.setAttribute('id',getId)
     element.remove(); 
     resolve("Appended")
-  })
-  
- 
+  }) 
 }
-
-/* resetHandler = () => {
-  let image = this.props.selected.canvaselement
-  let  imgId = '#' + image.attr('id');
-  let adjust = [...this.state.adjust];
-    console.log(adjust)
-    adjust.map(el => {
-        el.range = 0
-    });
-    this.setState({
-      adjust: adjust
-    },() => {
-      window.caman(imgId, function() { 
-        this.reset()
-      })
-    })
-  
-} */
-
 
 resetHandler = () => {
   let adjust = [...this.state.adjust]
@@ -225,28 +200,12 @@ else{
     alert("There is nothing to reset")
   }
 }
-
- /*  let image = this.props.selected.canvaselement
-  let  imgId = '#' + image.attr('id');
-  let adjust = [...this.state.adjust];
-    console.log(adjust)
-    adjust.map(el => {
-        el.range = 0
-    });
-    this.setState({
-      adjust: adjust
-    },() => {
-      window.caman(imgId, function() { 
-        this.reset()
-      })
-    })
-   */
 } 
 
   render() {
     let slider = this.state.adjust.map((element, i) => {
       if(element.name === 'brightness' ||  element.name === 'contrast' || element.name === 'saturation' ||  element.name === 'hue' ||  
-      element.name === 'vibrance' ||  element.name === 'exposure'){
+      element.name === 'vibrance' ||  element.name === 'exposure' ){
         return (
           <Slider
             SliderRange={element}
@@ -283,3 +242,24 @@ else{
 
 
 export default Adjust;
+
+
+
+/* 
+Unsharp Mask [demo]
+canvas.unsharpMask(radius, strength);
+
+Vignette [demo]
+canvas.vignette(size, amount);
+
+Lens Blur [demo]
+canvas.lensBlur(radius, brightness, angle);
+
+Zoom Blur [demo]
+canvas.zoomBlur(centerX, centerY, strength);
+
+Hexagonal Pixelate [demo]
+canvas.hexagonalPixelate(centerX, centerY, scale);
+
+Ink [demo]
+canvas.ink(strength); */

@@ -95,6 +95,9 @@ class App extends Component {
   }
 
   componentDidMount() {
+    document.getElementById('adjust').disabled = true;
+ document.getElementById('delete').disabled = true;
+ document.getElementById('ungroupIndivi').disabled = true;
      this.platform = window.platform
      let image = {...this.state.image}
      image.allImageElement = document.querySelectorAll('img')
@@ -105,6 +108,8 @@ class App extends Component {
       selectables: document.getElementsByClassName("ele-select"),
       area: document.getElementById("canvas"),
       onElementSelect: element => {
+       // console.log(element);
+        
         /*  if($(element).attr('class').indexOf('flippable') > -1 || 
         $(element).attr('id').indexOf('canvas1') > -1) */
         if (
@@ -115,17 +120,20 @@ class App extends Component {
           this.canvas = fx.canvas();
           $("#adjust").css({
             opacity: 1,
-            disabled: false
           });
+          document.getElementById('adjust').disabled = false;
         };
         this.positionElement = element;
         let slidder = { ...this.state.slidder };
         slidder.selected.push(element);
         slidder.selected = [...new Set(slidder.selected)];
         slidder.range = Math.trunc($(element).css("opacity") * 100);
+        let image = {...this.state.image}
+        image.element = $(this.deleteElm).children();
         this.setState({
           slidder: slidder,
           platform: this.platform,
+          image: image
         });
         this.idArray.push(this.ds.getSelection());
         this.copyArr.push(element);        
@@ -151,8 +159,12 @@ class App extends Component {
       });
       $("#adjust").css({
         opacity: 0,
-        disabled: true
       });
+    
+      document.getElementById('adjust').disabled = true;
+      document.getElementById('delete').disabled = true;
+      document.getElementById('ungroupIndivi').disabled = true;
+
       let slidder = { ...this.state.slidder };
       slidder.selected = [];
       this.setState({
@@ -182,7 +194,7 @@ class App extends Component {
         $("#delete").css({
           opacity: 1
         })  
-              
+        document.getElementById('delete').disabled = false;   
         if ($(e.target)[0].nodeName === 'CANVAS' || $(e.target).parent().attr("class").indexOf("perm") > -1 ||
           $(e.target).attr("class").indexOf("perm") > -1 ||
           ($(e.target).attr("class").indexOf("flippable-ele") > -1 &&
@@ -190,6 +202,7 @@ class App extends Component {
           $("#ungroupIndivi").css({
             opacity: 1
           });
+          document.getElementById('ungroupIndivi').disabled = false;
           // this.canvasToimg(e);
         }
         this.idArray = [];
@@ -296,11 +309,14 @@ class App extends Component {
         return "#" + $(value).attr("id");
       });
       var valString = valTemp.toString();
+     
+      
       $(valString).wrapAll('<div class="wrapped ele-select ds-selected"></div>');
       valTemp.forEach(element => {
         $(element).draggable("disable");
         this.ds.removeSelectables($(element), true);
       });
+      this.ds.addSelectables($(valString).parent())
       $(".wrapped").draggable({
         cursor: "move"
       });
@@ -520,55 +536,135 @@ class App extends Component {
       this.positionElement = "";
     }
   };
-
-  duplicateElement = (copyArr) => {
-    let ele = [...document.getElementsByClassName('ds-selected')]
+checkForImgElement = (el) => {
+return new Promise((resolve, reject) => {
+  if(el.getAttribute('class').indexOf('flippable') > -1){
+    resolve('image')
+  }else{
+    resolve('normal-element') 
+  }
+})
+}
+   duplicateElement = (copyArr) => {
+    let ele = [...document.getElementsByClassName('ds-selected')]   
     if(ele.length > 0){
       let cln = ele[0].cloneNode(true);
       let orgEleId = (ele[0].getAttribute('id'));
       ele[0].parentNode.insertBefore(cln, ele[0].nextSibling);
       if(orgEleId !== null){
-        this.uuidv4().then(val => {        
-          cln.setAttribute('id', 'cloned-'+ orgEleId  + val)
-          if(orgEleId.indexOf('perm') > -1){
-          let perm_child = [...cln.childNodes]
-            perm_child.forEach((el,i) => {
-              let orgId = el.getAttribute('id')
-              this.uuidv4().then(val => {    
-                el.setAttribute('id', 'cloned-'+ orgId  + val)
+        if(document.getElementById(orgEleId).getAttribute('class').indexOf('perm-wrapped') > -1){
+           this.uuidv4().then(val => {
+            cln.setAttribute('id', 'cloned-'+ orgEleId + '-' + val)
+            let perm_child = [...cln.childNodes];
+            perm_child.forEach(el => {
+              let elID = el.getAttribute('id')
+               this.checkForImgElement(el).then(val => {
+                if(val === 'image'){
+                   this.uuidv4().then(val => {
+                    el.setAttribute('id', 'cloned-'+ elID + '-' + val);
+                    let imgChild = [...el.childNodes];
+                    imgChild.forEach(el => {
+                      let imgChildID = el.getAttribute('id')
+                      this.uuidv4().then(val => {
+                        el.setAttribute('id', 'cloned-'+ imgChildID + '-' + val);
+                      })
+                    })
+                     
+                  })
+                }
+                else{
+                   this.uuidv4().then(val => {
+                    el.setAttribute('id', 'cloned-'+ elID + '-'  + val)
+                  })
+                }
               })
             })
-          }
-          cln.classList.add('cloned-'+ val);
+          })
+          // cln.classList.add('cloned-'+ val);
           $(cln).draggable({
             cursor: "move"
           });
           this.ds.addSelectables(document.getElementsByClassName("ele-select"));
-
           ele[0].classList.remove("ds-selected");
-          
-      })  
-    }
+        }else{
+          ele.forEach(el => {                    
+          this.checkForImgElement(el).then(val => {
+            let elID =  el.getAttribute('id');
+            if(val === 'image'){
+              let imgChild = [...el.childNodes]
+              this.uuidv4().then(val => {
+                el.setAttribute('id', 'cloned-'+ elID + '-'  + val)
+                imgChild.forEach(el => {
+                  let imgChildID = el.getAttribute('id');
+                  this.uuidv4().then(val => {
+                    el.setAttribute('id', 'cloned-'+ imgChildID + '-'  + val);
+                                     
+                    this.state.image.allImageElement.forEach(el => {                                                          
+                      if(this.state.image.element[0].getAttribute('id').indexOf(el.getAttribute('id')) > -1){
+                        this.canvas = fx.canvas();   
+                        alert("It's pending")
+                        // this.clickHandler('adjust', 'copying')                  
+                      }
+                    })
+                 
+                   
+                  })
+                })  
+              })
+            
+            }else{
+              this.uuidv4().then(val =>{
+                ele.forEach(el => {
+                  let elID =  el.getAttribute('id');
+                  el.setAttribute('id', 'cloned-'+ elID + '-'  + val)
+                })
+              })
+            }
+            $(cln).draggable({
+              cursor: "move"
+            });
+            this.ds.addSelectables(document.getElementsByClassName("ele-select"));
+            ele[0].classList.remove("ds-selected");
+          })
+        })
+        }
+      }
       else{
-        this.uuidv4().then(val => {        
-          cln.setAttribute('id', 'cloned-'+ 'wrapped'  + val)
-          cln.classList.add('cloned-'+ val);
-          $(cln).draggable({
-            cursor: "move"
-          });
-      })
-         this.ds.addSelectables(document.getElementsByClassName("ele-select"));
-         ele[0].classList.remove("ds-selected");
-          
-         let perm_child = [...cln.childNodes]
-         perm_child.forEach((el,i) => {
-           let orgId = el.getAttribute('id')
-           this.uuidv4().then(val => {    
-             el.setAttribute('id', 'cloned-'+ orgId  + val)
-           })
-         })
+        ele.forEach(el => {
+          this.uuidv4().then(val => {
+            el.setAttribute('id', 'cloned-wrapped-' + val);
+            let wrappedChild = [...el.childNodes];
+            wrappedChild.forEach(el => {
+              this.checkForImgElement(el).then(val => {
+                let elID = el.getAttribute('id')
+                if(val === 'image'){
+                  let imgChild = [...el.childNodes]
+              this.uuidv4().then(val => {
+                el.setAttribute('id', 'cloned-'+ elID + '-'  + val)
+                imgChild.forEach(el => {
+                  let imgChildID = el.getAttribute('id');
+                  this.uuidv4().then(val => {
+                    el.setAttribute('id', 'cloned-'+ imgChildID + '-'  + val);
+                  })
+                })
+              })
+                }
+                else{
+                  this.uuidv4().then(val => {
+                    el.setAttribute('id', 'cloned-'+ elID + '-'  + val)
+                  })
+                }
+              })
+            })
+          })
+        })
+        $(cln).draggable({
+          cursor: "move"
+        });
+        this.ds.addSelectables(document.getElementsByClassName("ele-select"));
+        ele[0].classList.remove("ds-selected");
+      }
     }  
-    }
   }
 
   uuidv4 = () => {
@@ -618,7 +714,15 @@ class App extends Component {
       this.copyArr = [];
     }
     if (val.value === "Adjust") {
-      let image = {...this.state.image}
+      if(event === 'copying'){
+        this.setState(
+          { 
+            adjust: true, 
+            image: image
+          }
+        );
+      }else{
+        let image = {...this.state.image}
       image.element = $(this.deleteElm).children();
       // image.src = $(this.deleteElm).children()[0].currentSrc
       this.setState(
@@ -627,6 +731,8 @@ class App extends Component {
           image: image
         }
       );
+      }
+      
     }
   };
   canvasToimg = (e) => {
@@ -1024,7 +1130,7 @@ let currentSrc = image[0].currentSrc
   };
   
   
-  render() {
+ render() {
     var button = this.state.btn.map((element, i) => {
       return (
         <Button
@@ -1088,6 +1194,7 @@ let currentSrc = image[0].currentSrc
                 height="70px"
               />
             </div>
+            
           </div>
         </div>
       </React.Fragment>
