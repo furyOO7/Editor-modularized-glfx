@@ -9,6 +9,7 @@ import Dropdown from "./components/Dropdown/dropdown";
 import Adjust from "./components/Adjust/Adjust";
 import { debug } from "util";
 import fx from 'glfx';
+import { lchown } from "fs";
 /* import SelectedElement from './components/SelectedElement/SelectedElement'; */
 // import Caman from 'caman'
 
@@ -59,7 +60,22 @@ class App extends Component {
       dataUrl: null,
       allImageElement: []
     },
-    platform: null
+    platform: null,
+    filter: {
+      showFilterBtn: false,
+      filters: [
+        { value: "Filters", id: "" },
+        { value: "Epic", id: "epic" },
+        { value: "Festive", id: "festive" },
+        { value: "AfterGlow", id: "afterGlow" },
+        { value: "Solar", id: "solar" },
+        { value: "Cali", id: "cali" },
+        { value: "Nordic", id: "nordic" },
+        { value: "GreyScale", id: "greyScale" },
+        { value: "Street", id: "street" }
+      ]
+    }
+
   };
  base_URL = "http://localhost:3000/";
   constructor(props) {
@@ -87,7 +103,6 @@ class App extends Component {
     window.caman = Caman;
     try {
       this.canvas = fx.canvas();
-      
  } catch (e) {
      alert(e);
      return;
@@ -95,7 +110,7 @@ class App extends Component {
   }
 
   componentDidMount() {
-    document.getElementById('adjust').disabled = true;
+  document.getElementById('adjust').disabled = true;
  document.getElementById('delete').disabled = true;
  document.getElementById('ungroupIndivi').disabled = true;
      this.platform = window.platform
@@ -108,8 +123,6 @@ class App extends Component {
       selectables: document.getElementsByClassName("ele-select"),
       area: document.getElementById("canvas"),
       onElementSelect: element => {
-       // console.log(element);
-        
         /*  if($(element).attr('class').indexOf('flippable') > -1 || 
         $(element).attr('id').indexOf('canvas1') > -1) */
         if (
@@ -121,7 +134,10 @@ class App extends Component {
           $("#adjust").css({
             opacity: 1,
           });
-          document.getElementById('adjust').disabled = false;
+          document.getElementById('adjust').disabled = false; 
+          let filter = {...this.state.filter}
+          filter.showFilterBtn = true;
+          this.setState({ filter: filter  });
         };
         this.positionElement = element;
         let slidder = { ...this.state.slidder };
@@ -164,12 +180,14 @@ class App extends Component {
       document.getElementById('adjust').disabled = true;
       document.getElementById('delete').disabled = true;
       document.getElementById('ungroupIndivi').disabled = true;
-
+      let filter = {...this.state.filter}
+      filter.showFilterBtn = false;
       let slidder = { ...this.state.slidder };
       slidder.selected = [];
       this.setState({
         slidder: slidder,
-        adjust: false
+        adjust: false,
+        filter: filter
       });
       if (
         $(e.target)
@@ -546,11 +564,29 @@ return new Promise((resolve, reject) => {
 })
 }
    duplicateElement = (copyArr) => {
+  let newArray = []
     let ele = [...document.getElementsByClassName('ds-selected')]   
     if(ele.length > 0){
       let cln = ele[0].cloneNode(true);
       let orgEleId = (ele[0].getAttribute('id'));
       ele[0].parentNode.insertBefore(cln, ele[0].nextSibling);
+      let image = {...this.state.image}
+      let store = document.querySelectorAll('img')   
+      console.log(image, store);
+      
+     Array.prototype.forEach.call(image.allImageElement, (demoElement) =>  {
+       Array.prototype.forEach.call(store, (demoElement1) =>  {
+          if(demoElement.getAttribute('id') !== demoElement1.getAttribute('id'))
+            newArray.push(demoElement1)
+       })
+     })
+     newArray = [...new Set(newArray)];
+    let temp = [...image.allImageElement]
+     temp.push(...newArray)
+     temp = [...new Set(temp)];
+     image.allImageElement = temp; 
+    this.setState({ image: image });
+     
       if(orgEleId !== null){
         if(document.getElementById(orgEleId).getAttribute('class').indexOf('perm-wrapped') > -1){
            this.uuidv4().then(val => {
@@ -597,17 +633,31 @@ return new Promise((resolve, reject) => {
                 imgChild.forEach(el => {
                   let imgChildID = el.getAttribute('id');
                   this.uuidv4().then(val => {
-                    el.setAttribute('id', 'cloned-'+ imgChildID + '-'  + val);
-                                     
+                    let clonedImgID = 'cloned-'+ imgChildID + '-'  + val;
+                    el.setAttribute('id', 'cloned-'+ imgChildID + '-'  + val);          
                     this.state.image.allImageElement.forEach(el => {                                                          
                       if(this.state.image.element[0].getAttribute('id').indexOf(el.getAttribute('id')) > -1){
                         this.canvas = fx.canvas();   
-                        alert("It's pending")
-                        // this.clickHandler('adjust', 'copying')                  
+                        if(document.getElementById(orgEleId).childNodes[0].tagName === 'CANVAS'){
+                          let copyElement, tempArry = null;
+                          let image = {...this.state.image};
+                          image.element = document.getElementById(orgEleId).childNodes
+                          image.allImageElement.forEach(el => {
+                          if(clonedImgID.indexOf(el.getAttribute('id')) > -1){
+                            copyElement = el.cloneNode(true);
+                            copyElement.setAttribute('id',clonedImgID)
+                           image.allImageElement.push(copyElement) 
+                          }
+                            
+                          })
+                         
+                          this.setState({ adjust: true, image: image  }, () => {
+                            console.log(this.state.image);
+                            
+                          });
+                        } 
                       }
-                    })
-                 
-                   
+                    })                                   
                   })
                 })  
               })
@@ -1084,6 +1134,23 @@ let currentSrc = image[0].currentSrc
         }
       }
     }
+    if(event.target.value === 'Epic'){
+      let child = this.positionElement.childNodes;      
+      this.canvas = fx.canvas();
+      let texture = this.canvas.texture(child[0]);
+      let x = this.canvas.draw(texture);
+      x.brightnessContrast(.06,.20)
+      // x.hueSaturation(0, -.14)
+      x.sepia(.50)
+      x.update();
+      
+      let getClass = child[0].getAttribute('class');
+      let getId = child[0].getAttribute('id');
+      this.positionElement.appendChild(this.canvas);
+      this.canvas.classList.add(getClass);
+      this.canvas.setAttribute('id', getId)
+      child[0].remove();      
+    }
   };
   /* function to flip element */
   flipElement = (transformMatrixArr, flipTye) => {
@@ -1141,6 +1208,7 @@ let currentSrc = image[0].currentSrc
       );
     });
 
+
     // For displaying selected Element
     /* var SelectedEle = this.state.slidder.selected ? <SelectedElement selected={this.state.slidder.selected} /> : null */
 
@@ -1155,6 +1223,7 @@ let currentSrc = image[0].currentSrc
           dropdown={this.state.flip}
           dropdownClick={this.dropdownClickHandler}
         />
+         {this.state.filter.showFilterBtn ? <Dropdown dropdown={this.state.filter.filters}  dropdownClick={this.dropdownClickHandler} /> : null}
         {this.state.slidder.selected.length > 0 ? (
           <Slider
             SliderRange={this.state.slidder}
@@ -1202,3 +1271,28 @@ let currentSrc = image[0].currentSrc
   }
 }
 export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{/* <div class="overlay" style="
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,#ff00d95e, #ff00ae4d, #ff005963,#ff002b6b);
+">{}
+    </div> */}

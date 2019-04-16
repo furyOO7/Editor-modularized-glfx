@@ -43,7 +43,9 @@
 #canvas {
     width:300px;
     height:500px;
-    border: 10px solid transparent;
+    /* border: 10px solid transparent; */
+    /* margin: 0 !important;
+    padding: 0 !important; */
 }
 .rectangle {
     border: 1px solid #FF0000;

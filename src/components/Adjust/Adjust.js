@@ -10,7 +10,7 @@ class Adjust extends Component {
     super(props);
     console.log(this.props);
     // this.applyFilter = this.applyFilter.bind(window)
-    
+
     this.state = {
       adjust: [
         {
@@ -61,15 +61,15 @@ class Adjust extends Component {
       ],
       changedElement: null,
     };
-    this.loopCanvasElement =  null;
+    this.loopCanvasElement = null;
     this.currentId = this.props.selected.element[0].id;
-     if (this.props.selected.element[0].tagName === 'IMG') {
+    if (this.props.selected.element[0].tagName === 'IMG') {
       this.texture = this.props.canvas.texture(this.props.selected.element[0]);
-    } 
-    if (this.props.selected.element[0].tagName === 'CANVAS') {      
+    }
+    if (this.props.selected.element[0].tagName === 'CANVAS') {
       this.props.selected.allImageElement.forEach(el => {
-        console.log(el.getAttribute('id') , this.props.selected.allImageElement,el.getAttribute('id'), this.props.selected.element[0].getAttribute('id'), this.props.selected.element[0].getAttribute('id').indexOf(el.getAttribute('id')));
-        if(el.getAttribute('id') === this.props.selected.element[0].getAttribute('id') || this.props.selected.element[0].getAttribute('id').indexOf(el.getAttribute('id')) > -1){
+        // console.log(el.getAttribute('id') , this.props.selected.allImageElement,el.getAttribute('id'), this.props.selected.element[0].getAttribute('id'), this.props.selected.element[0].getAttribute('id').indexOf(el.getAttribute('id')));
+        if (el.getAttribute('id') === this.props.selected.element[0].getAttribute('id')) {
           this.loopCanvasElement = el;
           this.texture = this.props.canvas.texture(el);
         }
@@ -77,30 +77,29 @@ class Adjust extends Component {
     }
   }
 
-componentDidMount() {
- if(this.props.selected.element[0].getAttribute('data-adjust')){
-   let data_adjust = JSON.parse(this.props.selected.element[0].getAttribute('data-adjust'));
-   let adjust = [...this.state.adjust]
- let newArray  =  [];
- adjust.map(el => {
-    for(let i in data_adjust){
-     if(data_adjust[i].name === el.name){
-      data_adjust[i].functionName = el.functionName
-      newArray.push(data_adjust[i])
-     }
+  componentDidMount() {
+    if (this.props.selected.element[0].getAttribute('data-adjust')) {
+      let data_adjust = JSON.parse(this.props.selected.element[0].getAttribute('data-adjust'));
+      let adjust = [...this.state.adjust]
+      let newArray = [];
+      adjust.map(el => {
+        for (let i in data_adjust) {
+          if (data_adjust[i].name === el.name) {
+            data_adjust[i].functionName = el.functionName
+            newArray.push(data_adjust[i])
+          }
+        }
+      })
+      this.setState({
+        adjust: newArray
+      }, () => {
+        console.log(this.loopCanvasElement);
+        this.props.selected.element[0].parentElement.appendChild(this.loopCanvasElement);
+        this.props.selected.element[0].remove();
+        this.applyFilter()
+      })
     }
-})
-this.setState({
-  adjust: newArray
-}, () => { 
-  this.props.selected.element[0].parentElement.appendChild(this.loopCanvasElement);
-  this.props.selected.element[0].remove();
-  this.applyFilter()
-})
- }
-
-}
-
+  }
 
   slidderChangeHandler = (event, element) => {
     // event.persist();
@@ -111,101 +110,103 @@ this.setState({
         el.range = event.target.value;
       }
     });
-    adjust =  [...this.state.adjust]
+    adjust = [...this.state.adjust]
     this.setState({ adjust: adjust, changedElement: element }, () => {
-     this.applyFilter(temp);
-     
+      this.applyFilter(temp);
+
     });
-};
+  };
 
-/* Applying filter on image */
-applyFilter = (element) => {
-  let adjust = [...this.state.adjust];
-  let x = this.props.canvas.draw(this.texture);
-  let ajustObj = [];
-  
-  adjust.forEach((el) => {
-    let objAdj = {};
-    if(el.name !== 'triangleBlur'){
-      x[el.functionName](parseFloat(el.range)/100, 0).update();  
-      objAdj.name = el.name;
-      objAdj.range = el.range;
-      ajustObj.push(objAdj)  
-     }
-     else{
-      x[el.functionName](parseFloat(el.range), 0).update();
-      objAdj.name = el.name;
-      objAdj.range = el.range;
-      ajustObj.push(objAdj);
-     }  
-  });
-  let imgID = this.props.selected.element[0].getAttribute('id');
- 
-if(document.getElementById(imgID) !== null && document.getElementById(imgID).tagName === 'IMG'){
-   this.appendCanvas(this.props.selected.element[0]).then(val => {
-    if(val === 'Appended'){
-      let currentItem=document.querySelector("#"+this.currentId)
-      currentItem.setAttribute("data-adjust",JSON.stringify({...ajustObj}))
+  /* Applying filter on image */
+  applyFilter = (element) => {
+    let adjust = [...this.state.adjust];
+    let x = this.props.canvas.draw(this.texture);
+    let ajustObj = [];
+
+    adjust.forEach((el) => {
+      let objAdj = {};
+      if (el.name !== 'triangleBlur') {
+        x[el.functionName](parseFloat(el.range) / 100, 0).update();
+        objAdj.name = el.name;
+        objAdj.range = el.range;
+        ajustObj.push(objAdj)
+      }
+      else {
+        x[el.functionName](parseFloat(el.range), 0).update();
+        objAdj.name = el.name;
+        objAdj.range = el.range;
+        ajustObj.push(objAdj);
+      }
+    });
+    let imgID = this.props.selected.element[0].getAttribute('id');
+    // console.log("Imhhhhhjhhhh", imgID, document.getElementById(imgID), this.loopCanvasElement);
+
+    if (document.getElementById(imgID) !== null && document.getElementById(imgID).tagName === 'IMG') {
+      this.appendCanvas(this.props.selected.element[0]).then(val => {
+        if (val === 'Appended') {
+          let currentItem = document.querySelector("#" + this.currentId)
+          currentItem.setAttribute("data-adjust", JSON.stringify({ ...ajustObj }))
+        }
+      })
     }
-  })
-}
-if(document.getElementById(imgID).tagName === 'CANVAS'){
-      let currentItem=document.querySelector("#"+this.currentId)      
-      currentItem.setAttribute("data-adjust",JSON.stringify({...ajustObj}))
-}
-if(this.loopCanvasElement){
-  this.appendCanvas(this.loopCanvasElement).then(val => {
-   if(val === 'Appended'){
-     let currentItem=document.querySelector("#"+this.currentId)
-     currentItem.setAttribute("data-adjust",JSON.stringify({...ajustObj}))
-   }
- })
-}
-}
+    if (document.getElementById(imgID) && document.getElementById(imgID).tagName === 'CANVAS') {
+      let currentItem = document.querySelector("#" + this.currentId)
+      currentItem.setAttribute("data-adjust", JSON.stringify({ ...ajustObj }))
+    }
+    if (this.loopCanvasElement) {
+      console.log("looping element", this.loopCanvasElement);
+      this.appendCanvas(this.loopCanvasElement).then(val => {
+        if (val === 'Appended') {
+          let currentItem = document.querySelector("#" + this.currentId)
+          currentItem.setAttribute("data-adjust", JSON.stringify({ ...ajustObj }))
+        }
+      })
+    }
+  }
 
-appendCanvas = (element)=>{  
-  return new Promise((resolve, reject) => {
-    let getClass = element.getAttribute('class');
-    let getId =  element.getAttribute('id');
-    document.getElementById(getId).parentElement.appendChild(this.props.canvas);
-    this.props.canvas.classList.add(getClass);
-    this.props.canvas.setAttribute('id',getId)
-    element.remove(); 
-    resolve("Appended")
-  }) 
-}
+  appendCanvas = (element) => {
+    return new Promise((resolve, reject) => {
+      let getClass = element.getAttribute('class');
+      let getId = element.getAttribute('id');
+      document.getElementById(getId).parentElement.appendChild(this.props.canvas);
+      this.props.canvas.classList.add(getClass);
+      this.props.canvas.setAttribute('id', getId)
+      element.remove();
+      resolve("Appended")
+    })
+  }
 
-resetHandler = () => {
-  let adjust = [...this.state.adjust]
-  const shouldResetWork = adjust.every(el => el.range === 0  )
-   adjust = [...this.state.adjust];
+  resetHandler = () => {
+    let adjust = [...this.state.adjust]
+    const shouldResetWork = adjust.every(el => el.range === 0)
+    adjust = [...this.state.adjust];
     adjust.forEach(el => {
-      if(el.range !== 0){
+      if (el.range !== 0) {
         el.range = 0
       }
     })
-if(this.props.selected.element[0].tagName === 'CANVAS'){
-  this.setState({ adjust: adjust }, () => {
-    this.applyFilter();
-  });
-}
-else{
-  if(!shouldResetWork){
-    this.texture = this.props.canvas.texture(this.props.selected.element[0]);
-    let x = this.props.canvas.draw(this.texture);
-    this.setState({ adjust: adjust }, () => {
-      this.applyFilter();
-    });
-  }else{
-    alert("There is nothing to reset")
+    if (this.props.selected.element[0].tagName === 'CANVAS') {
+      this.setState({ adjust: adjust }, () => {
+        this.applyFilter();
+      });
+    }
+    else {
+      if (!shouldResetWork) {
+        this.texture = this.props.canvas.texture(this.props.selected.element[0]);
+        let x = this.props.canvas.draw(this.texture);
+        this.setState({ adjust: adjust }, () => {
+          this.applyFilter();
+        });
+      } else {
+        alert("There is nothing to reset")
+      }
+    }
   }
-}
-} 
 
   render() {
     let slider = this.state.adjust.map((element, i) => {
-      if(element.name === 'brightness' ||  element.name === 'contrast' || element.name === 'saturation' ||  element.name === 'hue' ||  
-      element.name === 'vibrance' ||  element.name === 'exposure' ){
+      if (element.name === 'brightness' || element.name === 'contrast' || element.name === 'saturation' || element.name === 'hue' ||
+        element.name === 'vibrance' || element.name === 'exposure') {
         return (
           <Slider
             SliderRange={element}
@@ -214,10 +215,10 @@ else{
             }
             min="-100" max="100" step='1' slidertype={element.name}
             key={element.name + i}
-         
+
           />
         );
-      }else{
+      } else {
         return (
           <Slider
             SliderRange={element}
@@ -229,13 +230,13 @@ else{
           />
         );
       }
-    
+
     });
     return (
       <React.Fragment>
-    <div className="adjust-main-container">{slider}</div>
-    <button onClick={this.resetHandler}>Reset</button>
-    </React.Fragment>
+        <div className="adjust-main-container">{slider}</div>
+        <button onClick={this.resetHandler}>Reset</button>
+      </React.Fragment>
     )
   }
 }
@@ -245,7 +246,7 @@ export default Adjust;
 
 
 
-/* 
+/*
 Unsharp Mask [demo]
 canvas.unsharpMask(radius, strength);
 
